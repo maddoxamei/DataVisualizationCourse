@@ -1,0 +1,104 @@
+---
+title: "Gun Support"
+author: "Mei Maddox"
+date: "1/18/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+id <- "1LjvpZgEiAu3M4YWDAxS76Hfw95AD90BK"
+
+df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+colnames(df) <- colnames(df) %>% tolower()
+
+df.subset <- df %>% 
+  dplyr::select(owngun, gunsales, gunlaw, year) %>%
+  dplyr::filter(owngun %in% 1:2) %>%
+  dplyr::filter(gunsales %in% 1:5) %>%
+  dplyr::filter(gunlaw %in% 1:2) %>%
+  dplyr::mutate_all(as.factor) %>%
+  dplyr::mutate(owngun=forcats::fct_recode(owngun, `Yes`="1", 
+                                        `No`="2"))%>%
+  dplyr::mutate(gunsales=forcats::fct_recode(gunsales,
+                                             `Strongly favor`="1",
+                                        `Favor`="2",
+                                        `Neither favor nor oppose`="3",
+                                        `Oppose`="4",
+                                        `Strongly oppose`="5")) %>%
+  dplyr::mutate(gunlaw=forcats::fct_recode(gunlaw,
+                                        `Favor`="1",
+                                        `Oppose`="2")) %>%
+  mutate(gunsales_recoded=forcats::fct_collapse(gunsales, Favor=c("Strongly favor","Favor"), Oppose=c("Strongly oppose","Oppose")))
+```
+
+```{r echo=FALSE}
+plot_ly() %>%
+  add_pie(data=count(df.subset, gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="American Populous",
+          title="General American Populous",
+          domain = list(x = c(0.25, .75), y = c(0.3, 1))) %>%
+  add_pie(data=df.subset %>% filter(owngun =="Yes") %>% count(gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="Gun owners",
+          title="Gun owners",
+          domain = list(row = 1, column = 0)) %>%
+  add_pie(data=df.subset %>% filter(owngun =="No") %>% count(gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="Non-Gun owners",
+          title="Non-Gun owners",
+          domain = list(row = 1, column = 1)) %>%
+    layout(title = "Support for gun background checks (based on 2006 GSS data)",
+                      grid=list(rows=2, columns=2),
+                      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+           legend = list(orientation = 'h'))
+```
+
+
+```{r echo=FALSE, include=FALSE}
+plot_ly() %>%
+  add_pie(data=count(df.subset, gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="American Populous",
+          title="General American Populous",
+          domain = list(row = 0, column = 0)) %>%
+  add_pie(data=df.subset %>% filter(owngun =="Yes") %>% count(gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="Gun owners",
+          title="Gun owners",
+          domain = list(row = 1, column = 0)) %>%
+  add_pie(data=df.subset %>% filter(owngun =="No") %>% count(gunsales_recoded), 
+          labels=~gunsales_recoded,
+          values=~n,
+          name="Non-Gun owners",
+          title="Non-Gun owners",
+          domain = list(row = 1, column = 1)) %>%
+    layout(title = "Support for gun background checks\n Data obtained from the 2006 GSS\n",
+                      grid=list(rows=2, columns=2),
+                      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+           legend = list(orientation = 'h'))
+```
+
+## Variables
+
+**GUNSALES 1113.** In most states a gun owner may legally sell his or her gun without proof that the buyer has passed a criminal history check. How strongly do you favor or oppose a law that required private gun sales to be subject to the same background check 
+requirements as sales by licensed dealers? Do you...
+
+**OWNGUN 237.** Do you happen to have in your home (or garage) any guns or 
+revolvers?
+
+**GUNLAW 86.** Would you favor or oppose a law which would require a person to obtain a police permit before he or she could buy a gun?

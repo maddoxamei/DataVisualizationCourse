@@ -1,0 +1,117 @@
+---
+title: "GGPlot Practice"
+author: "Mei Maddox"
+date: "1/12/2022"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## General Social Survey
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(magrittr)
+
+id <- "1oK0Opc_tOHVSRvCxnYDEUu5zKEO7ZQ52"
+
+df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+
+df.subset <- df %>% dplyr::select(wrkstat, race, sex) %>% # Grab column of intrest
+  dplyr::filter(wrkstat != 9) %>% # Filter out NA's
+  dplyr::mutate_all(as.factor) %>%
+  dplyr::mutate(race=forcats::fct_recode(race, `White`="1", 
+                                        `Black`="2",
+                                        `Other`="3"))%>%
+  dplyr::mutate(sex=forcats::fct_recode(sex, `Male`="1", 
+                                        `Female`="2")) %>%
+  #dplyr::mutate(sex=forcats::fct_relevel(sex, c("Female","Male"))) %>%
+  dplyr::mutate(wrkstat=forcats::fct_recode(wrkstat, `Fulltime`="1", 
+                                        `Partime`="2", 
+                                        `Temp Not Working`="3",
+                                        `Unempl, Laid off`="4",
+                                        `Retired`="5",
+                                        `School`="6",
+                                        `Keeping House`="7",
+                                        `Other`="8")) %>%
+  dplyr::mutate(wrkstat=forcats::fct_collapse(wrkstat, Other=c("Other", "Unempl, Laid off","Temp Not Working")))%>%
+  dplyr::mutate(wrkstat=forcats::fct_relevel(wrkstat, c("Fulltime", "Partime","Retired","Keeping House","School","Other"))) 
+```
+
+```{r echo=FALSE}
+df.subset %>% 
+  dplyr::count(wrkstat) %>%
+  dplyr::mutate(prop = n/sum(n)) %>%
+  dplyr::mutate(wrkstat = forcats::fct_reorder(wrkstat, prop)) %>%
+  ggplot2::ggplot(ggplot2::aes(x=100*prop, y=wrkstat, fill=wrkstat)) +
+    ggplot2::geom_bar(stat = "identity") +
+    ggplot2::scale_x_continuous(expand=ggplot2::expansion(mult=c(NA, .2)))+
+    ggplot2::labs(x = "Percent", y="Work Status", title="Responses to Happiness Question", subtitle="Based on 2018 GSS") +
+    ggplot2::geom_label(ggplot2::aes(label=paste0(format(100*prop, digits=2), "%"), x=100*prop+5),
+                        color="black",
+                        size=3) +
+    ggplot2::theme(legend.position="none")
+```
+
+```{r echo=FALSE}
+df.subset %>% 
+  dplyr::group_by(wrkstat, race) %>%
+  dplyr::count(sex) %>%
+  dplyr::mutate(percent = 100*n/sum(n)) %>%
+  ggplot2::ggplot(ggplot2::aes(x=percent, y=race, fill=sex)) +
+    ggplot2::geom_bar(stat='identity', width=0.7) +
+    ggplot2::facet_wrap(dplyr::vars(wrkstat)) +
+    ggplot2::scale_color_hue(direction = 1) +
+    ggplot2::scale_fill_discrete(guide = ggplot2::guide_legend(reverse=TRUE)) + 
+    ggplot2::theme_classic() +
+    ggplot2::theme(legend.position="top") +
+    ggplot2::labs(x="Percent (%)", y="", title="Work Status by Sex and Race", subtitle="Based on 2018 GSS", fill="") +
+    ggplot2::scale_x_continuous(expand=ggplot2::expansion(mult=0))
+```
+```{r include=FALSE}
+df.subset %>% 
+  dplyr::group_by(wrkstat, race) %>%
+  dplyr::count(sex) %>%
+  dplyr::mutate(percent = 100*n/sum(n)) %>%
+  ggplot2::ggplot(ggplot2::aes(x=percent, y=NA, fill=sex)) +
+    ggplot2::geom_bar(stat='identity', width=0.7) +
+    ggplot2::facet_grid(rows=dplyr::vars(race),cols=dplyr::vars(wrkstat),switch='y') +
+    ggplot2::scale_color_hue(direction = 1) +
+    ggplot2::scale_fill_discrete(guide = ggplot2::guide_legend(reverse=TRUE)) + 
+    ggplot2::theme(legend.position="top",
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.line.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank()) +
+    ggplot2::labs(x="Percent (%)", y="", title="Work Status by Sex and Race", subtitle="Based on 2018 GSS", fill="") +
+    ggplot2::scale_x_continuous(expand=ggplot2::expansion(mult=0))
+```
+
+## Lending Club Loan Data
+
+```{r include=FALSE}
+# id <- "1lKGYrhWGsb8_1xaJoDoWoZxM88uaaBL1"
+# df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+df <- readr::read_csv("../../College/Data Visualization/LendingClubLoanData.csv")
+
+df.subset <- df %>%
+  dplyr::slice_sample(n=1000)
+```
+
+```{r echo=FALSE}
+hist <- df.subset %>%
+  ggplot2::ggplot(ggplot2::aes(x=int_rate)) +
+    ggplot2::geom_histogram(ggplot2::aes(y=..count..), bins=20, fill="lightblue", color=gray(0.9))+
+    ggplot2::geom_density(ggplot2::aes(y=..count..*1.35), size=.9)+
+    ggplot2::theme_classic() +
+    ggplot2::labs(title="Lending Club Interest Rates", x="Interest Rate (%)", y="Frequency")
+
+box <- df.subset %>%
+  ggplot2::ggplot(ggplot2::aes(x=int_rate)) +
+    ggplot2::geom_boxplot(fill="lightblue", outlier.shape=21, outlier.fill="lightblue", outlier.alpha=0.3)+
+    ggplot2::theme_classic() +
+    ggplot2::theme(line = ggplot2::element_blank(),text = ggplot2::element_blank())
+
+
+cowplot::plot_grid(hist, box, ncol = 1, rel_heights = c(0.85, 0.15), align = 'v', axis = 'lr')
+```
