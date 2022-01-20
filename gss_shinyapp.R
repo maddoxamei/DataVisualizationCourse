@@ -21,7 +21,9 @@ if( !require(gssr) ){
 # df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
 
 
-gss_doc %>% filter(marginals %>% sapply(ncol) == 5) %>% select(id) %>% as.list()
+factors <- gss_doc %>% 
+  filter(marginals %>% sapply(ncol) == 5) %>% 
+  select(id) %>% as.list() %>% unlist()
 
 ui <- fluidPage(
   navbarPage("General Social Survey",
@@ -30,14 +32,14 @@ ui <- fluidPage(
                         sidebarPanel(
                           selectInput("xvar", "Explanatory Variable:",  gss_all %>% colnames() %>% sort()),
                           selectizeInput("yvar", "Response Variable", NULL),
-                          sliderInput("yr_adj", "Year adjustment:",
-                                      min = 2000, max = 2022,
-                                      value = 1, step = 1,
-                                      animate =
-                                        animationOptions(interval = 300, loop = TRUE))
+                          uiOutput("yr_adj")
                         ),
                         mainPanel(
-                          plotlyOutput("plot")
+                          tabsetPanel(type = "tabs",
+                                      tabPanel("Plot", plotlyOutput("dataplot")),
+                                      tabPanel("Summary", verbatimTextOutput("datasummary")),
+                                      tabPanel("Table", DT::dataTableOutput("datatable"))
+                          )
                         )
                       )
              ),
@@ -60,12 +62,27 @@ server <- function(input, output, session) {
                          selected = "")
   })
   
+  output$yr_adj <- renderUI({
+    # sliderInput("yr_adj", "Year adjustment:",
+    #             value = 1, step = 1,
+    #             min = NULL, max = ,
+    #             sep = "",
+    #             animate = animationOptions(interval = 300, loop = TRUE))
+  })
+  
   details <- reactive({
     gss_doc %>% 
       filter(row_number() %in% input$vartable_rows_selected) %>%
       select(marginals) %>%
       as.list() %>%
       bind_rows()
+  })
+  
+  dataset <- reactive({
+    gss_all %>%
+      select(try(!!input$xvar, !!input$yvar)) %>%
+      mutate(across(intersect(colnames(.),factors), as.factor)) #%>% 
+      #filter(year == input$yr_adj)
   })
   
   output$vartable = DT::renderDataTable({
@@ -77,9 +94,17 @@ server <- function(input, output, session) {
     details(), selection = 'none'
   )
   
-  output$plot <- renderPlotly({
-    
+  output$dataplot <- renderPlotly({
+    if(input$yvar == "") plot_ly(dataset(), 
+                                 x=~get(input$xvar))
   })
+  output$datasummary = renderPrint(
+    dataset() %>% summary()
+  )
+  output$datatable = DT::renderDataTable(
+    dataset(), selection = 'none'
+  )
+  
 }
 
 shiny::shinyApp(ui, server)
