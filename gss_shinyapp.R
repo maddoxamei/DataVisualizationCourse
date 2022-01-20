@@ -82,7 +82,7 @@ server <- function(input, output, session) {
   
   data <- reactive({
     gss_all %>%
-      select(year, try(!!input$xvar, !!input$yvar)) %>%
+      select(year, !!input$xvar, intersect(colnames(.), !!input$yvar)) %>%
       filter(!if_all(-"year", is.na)) %>%
       mutate(across(intersect(colnames(.),factors), as.factor))
   })
@@ -102,8 +102,12 @@ server <- function(input, output, session) {
   )
   
   output$dataplot <- renderPlotly({
-    if(input$yvar == "") plot_ly(dataset(), 
-                                 x=~get(input$xvar))
+    if(input$yvar == "") return(plot_ly(dataset(), 
+                                 x=~get(input$xvar)))
+    else{
+      plot_ly(dataset(), 
+              x=~get(input$xvar), y=~get(input$yvar))
+    }
   })
   output$datasummary = renderPrint(
     dataset() %>% summary()
