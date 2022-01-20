@@ -1,0 +1,67 @@
+---
+title: "Shiny Practice"
+author: "Mei Maddox"
+date: "1/20/2022"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## mastering-shiny.org
+
+```{r eval=FALSE}
+library(shiny)
+
+ui <- fluidPage(
+  sliderInput("x", label = "If x is", min = 1, max = 50, value = 30),
+  sliderInput("y", label = "If y is", min = 1, max = 50, value = 5),
+  "then x times y is",
+  textOutput("product")
+)
+
+server <- function(input, output, session) {
+  output$product <- renderText({ 
+    input$x * input$y
+  })
+}
+
+shinyApp(ui, server)
+```
+
+## World Bank   
+
+```{r eval=FALSE}
+library(gapminder)
+library(plotly)
+
+id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
+df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+
+ui <- fluidPage(
+  sliderInput("year", "Year adjustment:",
+              min = min(df$Year), 
+              max = max(df$Year),
+              value = 1, 
+              step = 1,
+              sep = "",
+              animate = animationOptions(interval = 300,
+                                         loop = TRUE)),
+  plotlyOutput("plot")
+)
+
+server <- function(input, output, session) {
+  dataset <- reactive({
+    df %>% dplyr::filter(Year == input$year)
+  })
+  
+  output$plot <- renderPlotly({ 
+    dataset() %>% plot_ly(x=~LifeExpectancy, y=~Fertility, color=~Region)
+  })
+}
+
+shinyApp(ui, server)
+```
