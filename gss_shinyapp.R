@@ -32,7 +32,8 @@ ui <- fluidPage(
                         sidebarPanel(
                           selectInput("xvar", "Explanatory Variable:",  gss_all %>% colnames() %>% sort()),
                           selectizeInput("yvar", "Response Variable", NULL),
-                          uiOutput("yr_adj")
+                          radioButtons("yr_sep", "How to handle yearly data", c("Aggregate","Separate")),
+                          conditionalPanel("input.yr_sep == 'Separate'", uiOutput("yr_adj"))
                         ),
                         mainPanel(
                           tabsetPanel(type = "tabs",
@@ -63,26 +64,32 @@ server <- function(input, output, session) {
   })
   
   output$yr_adj <- renderUI({
-    # sliderInput("yr_adj", "Year adjustment:",
-    #             value = 1, step = 1,
-    #             min = NULL, max = ,
-    #             sep = "",
-    #             animate = animationOptions(interval = 300, loop = TRUE))
+    sliderInput("year", "Year adjustment:",
+                value = 1, step = 1,
+                min = data()$year %>% type.convert() %>% min(), 
+                max = data()$year %>% type.convert() %>% max(),
+                sep = "",
+                animate = animationOptions(interval = 300, loop = TRUE))
   })
   
   details <- reactive({
-    gss_doc %>% 
+    df <- gss_doc %>% 
       filter(row_number() %in% input$vartable_rows_selected) %>%
       select(marginals) %>%
       as.list() %>%
       bind_rows()
   })
   
-  dataset <- reactive({
+  data <- reactive({
     gss_all %>%
-      select(try(!!input$xvar, !!input$yvar)) %>%
-      mutate(across(intersect(colnames(.),factors), as.factor)) #%>% 
-      #filter(year == input$yr_adj)
+      select(year, try(!!input$xvar, !!input$yvar)) %>%
+      filter(!if_all(-"year", is.na)) %>%
+      mutate(across(intersect(colnames(.),factors), as.factor))
+  })
+  
+  dataset <- reactive({
+    if(input$yr_sep == "Aggregate") return(data())
+    return(data() %>% filter(year == input$year))
   })
   
   output$vartable = DT::renderDataTable({
