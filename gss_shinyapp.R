@@ -30,10 +30,15 @@ ui <- fluidPage(
              tabPanel("View Data", fluid = TRUE,
                       sidebarLayout(
                         sidebarPanel(
-                          selectInput("xvar", "Explanatory Variable:",  gss_all %>% colnames() %>% sort()),
-                          selectizeInput("yvar", "Response Variable", NULL),
-                          radioButtons("yr_sep", "How to handle yearly data", c("Aggregate","Separate")),
-                          conditionalPanel("input.yr_sep == 'Separate'", uiOutput("yr_adj"))
+                          pickerInput("xvar", "Explanatory Variable:",  gss_all %>% colnames() %>% sort(),
+                                      options = list(`live-search` = TRUE)),
+                          pickerInput("yvar", "Response Variable", NULL, 
+                                      options = list(`live-search` = TRUE, title = "Selection of this variable is optional")),
+                          radioGroupButtons("yr_sep", "How to handle yearly data", 
+                                            c("Aggregate","Separate"), 
+                                            checkIcon = list(yes = icon("ok",lib = "glyphicon"))),
+                          conditionalPanel("input.yr_sep == 'Separate'", uiOutput("yr_adj")),
+                          #radioGroupButtons("plot_type", "Choose a graph", choices = NULL, justified = T)
                         ),
                         mainPanel(
                           tabsetPanel(type = "tabs",
@@ -56,19 +61,15 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   observe({
-    updateSelectizeInput(session, "yvar", 
-                         choices = gss_all %>% select(-input$xvar) %>% colnames() %>% sort(),
-                         options = list(placeholder = "Selection of this variable is optional"),
-                         server = T,
-                         selected = "")
+    updatePickerInput(session, "yvar", 
+                         choices = gss_all %>% select(-input$xvar) %>% colnames() %>% sort())
+    updateRadioGroupButtons(session, "plot_type", choices = c(`<i class='fa fa-bar-chart'></i>` = "bar", `<i class='fa fa-line-chart'></i>` = "line", 
+                                                              `<i class='fa fa-pie-chart'></i>` = "pie"))
   })
   
   output$yr_adj <- renderUI({
-    sliderInput("year", "Year adjustment:",
-                value = 1, step = 1,
-                min = data()$year %>% type.convert() %>% min(), 
-                max = data()$year %>% type.convert() %>% max(),
-                sep = "",
+    sliderTextInput("year", "Year adjustment:",
+                data()$year %>% unique() %>% sort(),
                 animate = animationOptions(interval = 300, loop = TRUE))
   })
   
