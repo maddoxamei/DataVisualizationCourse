@@ -69,29 +69,28 @@ server <- function(input, output, session) {
   
   output$yr_adj <- renderUI({
     sliderTextInput("year", "Year adjustment:",
-                data()$year %>% unique() %>% sort(),
+                data$full %>% filter(!if_any(-"year", is.na)) %>% select(year) %>% as.list() %>% unlist() %>% unique() %>% sort(),
                 animate = animationOptions(interval = 300, loop = TRUE))
   })
   
   details <- reactive({
-    df <- gss_doc %>% 
+    gss_doc %>% 
       filter(row_number() %in% input$vartable_rows_selected) %>%
       select(marginals) %>%
       as.list() %>%
       bind_rows()
   })
   
-  data <- reactive({
-    gss_all %>%
-      select(year, !!input$xvar, intersect(colnames(.), !!input$yvar)) %>%
-      filter(!if_all(-"year", is.na)) %>%
-      mutate(across(intersect(colnames(.),factors), as.factor))
-  })
+  data <- reactiveValues(full = NULL, use = NULL)
+  observeEvent(list(input$xvar, input$yvar), data$full <- gss_all %>%
+                                          select(year, !!input$xvar, intersect(colnames(.), !!input$yvar)) %>%
+                                          filter(!if_all(-"year", is.na)) %>%
+                                          mutate(across(intersect(colnames(.),factors), as.factor)))
+  observeEvent(list(input$yr_sep, input$year, data$full), {
+                   if(input$yr_sep == "Aggregate") data$use <- data$full
+                   else data$use <- data$full %>% filter(year == input$year)
+                   })
   
-  dataset <- reactive({
-    if(input$yr_sep == "Aggregate") return(data())
-    return(data() %>% filter(year == input$year))
-  })
   
   output$vartable = DT::renderDataTable({
     gss_doc %>% 
@@ -103,18 +102,18 @@ server <- function(input, output, session) {
   )
   
   output$dataplot <- renderPlotly({
-    if(input$yvar == "") return(plot_ly(dataset(), 
+    if(input$yvar == "") return(plot_ly(data$use, 
                                  x=~get(input$xvar)))
     else{
-      plot_ly(dataset(), 
+      plot_ly(data$use, 
               x=~get(input$xvar), y=~get(input$yvar))
     }
   })
   output$datasummary = renderPrint(
-    dataset() %>% summary()
+    data$use %>% summary()
   )
   output$datatable = DT::renderDataTable(
-    dataset(), selection = 'none'
+    data$use, selection = 'none'
   )
   
 }
