@@ -13,7 +13,6 @@ test <- function(x, yr_sep, year){
 }
 
 server <- function(session, input, output){
-  
   observeEvent(input$regions, 
                updatePickerInput(session, "countries",
                                  choices = df %>%
@@ -23,6 +22,7 @@ server <- function(session, input, output){
                                    tidyr::pivot_wider(names_from = Region, values_from = Country) %>%
                                    as.list() %>% lapply(unlist))
                )
+  
   
   observeEvent(input$yr_sep,
                updateSliderTextInput(session, "year",
@@ -34,6 +34,9 @@ server <- function(session, input, output){
     data$agg <- df %>%
       filter( if(length(input$regions)==0) T else Region %in% input$regions) %>%
       filter( if(length(input$countries)==0) T else Country %in% input$countries)
+    updateSelectizeInput(session, "tracked_countries", 
+                         choices = data$agg %>%
+                           pull(Country) %>% unique() %>% sort())
   })
   observeEvent(list(input$yr_sep, input$year, data$agg), {
                  if(input$yr_sep) data$use <- data$agg %>%

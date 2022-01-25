@@ -36,6 +36,42 @@ sidebar <- dashboardSidebar(
 )
 
 body.plot <- dashboardBody(
+  dropdown(
+    icon = icon("paint-brush"),
+    style = "jelly",
+    label = "Color",
+    tooltip = tooltipOptions(title = "Click to select color variable"),
+    animate = animateOptions(
+      enter = animations$fading_entrances$fadeInLeftBig,
+      exit = animations$fading_exits$fadeOutRightBig
+    ),
+    varSelectizeInput("color", "Color Variable", df)
+  ),
+
+  dropdown(
+    icon = icon("search-location"),
+    style = "jelly",
+    label = "Track",
+    tooltip = tooltipOptions(title = "Click to view country tracking options"),
+    animate = animateOptions(
+      enter = animations$fading_entrances$fadeInLeftBig,
+      exit = animations$fading_exits$fadeOutRightBig
+    ),
+    prettyToggle(
+      "trail",
+      label_on = "Trailing Activated",
+      label_off = "Trailing Deactivated",
+      shape = "round",
+      icon_on = icon("route"),
+      icon_off = icon("route"),
+      # bigger = T,
+      # thick = T,
+      animation = "pulse"
+    ),
+    selectizeInput("tracked_countries", "Track the Following Countries:", NULL, multiple = TRUE),
+  ),
+
+  plotlyOutput("")
 )
 
 body.summary <- tabPanel("Summary",icon = icon("list-alt"),
