@@ -86,7 +86,30 @@ body.plot <- tabPanel("Plot",icon = icon("chart-bar"),
 )
 
 body.summary <- tabPanel("Summary",icon = icon("list-alt"),
-                         verbatimTextOutput("datasummary"))
+                         verbatimTextOutput("datasummary"),
+                         fluidRow(
+                           valueBoxOutput("nrows"),
+                           valueBoxOutput("ncountries"),
+                           valueBoxOutput("nregions")
+                         ),
+                         fluidRow(
+                           box(title="Fertility",
+                               status = "info",
+                               solidHeader = T,
+                               plotlyOutput("fertility")
+                           ),
+                           box(title="Life Expectancy",
+                               status = "info",
+                               solidHeader = T,
+                               plotlyOutput("lifeexp")
+                           ),
+                           box(title="Population",
+                               status = "info",
+                               solidHeader = T,
+                               plotlyOutput("population")
+                           )
+                         )
+                         )
 
 body <- dashboardBody(
   navbarPage( title = "Gapminder",

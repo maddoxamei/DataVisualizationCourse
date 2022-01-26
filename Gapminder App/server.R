@@ -76,51 +76,47 @@ server <- function(session, input, output){
                   symbol = 'x'
                 )
       )
-    
-    
-    
-    
-    # plot_ly(data$use,
-    #         x=~LifeExpectancy, y=~Fertility,
-    #         text = ~Country
-    #         color = ~Region) %>%
-    #   add_annotations(data = data$use %>%
-    #                     filter( if(length(input$tracked_countries)==0) F else Country %in% input$tracked_countries)) %>%
-      # add_trace(data = data$use %>% head(),
-      #           x=~LifeExpectancy, y=~Fertility,
-      #           marker = list(
-      #             color = I("black"),
-      #             symbol = 'x'
-      #           )
-      # )
-                
-      
-      # plot_ly(data = data$use, x=~LifeExpectancy, y=~Fertility, size=~Population,
-      #         text = ~Country,
-      #         color = ~get(input$color),
-      #         hovertemplate = paste("<b>%{text}</b><br><br>",
-      # 
-      #                               "%{yaxis.title.text}: %{y:,.2f}<br>",
-      # 
-      #                               "%{xaxis.title.text}: %{x:,.2f}<br>",
-      # 
-      #                               "Population (size): %{marker.size:,.2f}",
-      #                               "<extra></extra>")) %>% #, color=~get(input$color)
-      # layout(xaxis = list(range = c(15, 90)),
-      #        yaxis = list(range = c(0, 9),
-      #                     zeroline = FALSE)) %>%
-      # add_annotations( data = data$use %>%
-      #                    filter( if(length(input$tracked_countries)==0) F else Country %in% input$tracked_countries)) #%>%
-      # add_trace(data = data$use %>% head(), 
-      #           marker = list(
-      #             color = I("black"), 
-      #             symbol = 'x'))
   })
 
-
-  output$datasummary <- renderPrint(
-    data$use %>% summary()
-  )
+  output$nrows <- renderValueBox({
+    valueBox(data$use %>% nrow(), "Number of Rows", icon("bars"))
+  })
+  output$nregions <- renderValueBox({
+    valueBox(data$use %>% pull(Region) %>% unique() %>% length(),
+             "Number of Regions",
+             icon("globe"))
+  })
+  output$ncountries <- renderValueBox({
+    valueBox(data$use %>% pull(Country) %>% unique() %>% length(),
+             "Number of Countries",
+             icon("flag"))
+  })
+  
+  output$fertility <- renderPlotly({
+    hist <- data$use %>% 
+      plot_ly(x = ~Fertility, histnorm = "probability")
+    box <- data$use %>%
+      plot_ly(x = ~Fertility, type = "box")
+    subplot(hist, box, nrows = 2, heights = c(0.7, 0.3), shareX = T) %>%
+      layout(showlegend = FALSE)
+  })
+  output$lifeexp <- renderPlotly({
+    hist <- data$use %>% 
+      plot_ly(x = ~LifeExpectancy, histnorm = "probability")
+    box <- data$use %>%
+      plot_ly(x = ~LifeExpectancy, type = "box")
+    subplot(hist, box, nrows = 2, heights = c(0.7, 0.3), shareX = T) %>%
+      layout(showlegend = FALSE)
+  })
+  output$population <- renderPlotly({
+    hist <- data$use %>% 
+      plot_ly(x = ~Population, histnorm = "probability")
+    box <- data$use %>%
+      plot_ly(x = ~Population, type = "box")
+    subplot(hist, box, nrows = 2, heights = c(0.7, 0.3), shareX = T) %>%
+      layout(showlegend = FALSE)
+  })
+  
   output$datatable <- DT::renderDataTable(
     data$use, selection = 'none'
   )
