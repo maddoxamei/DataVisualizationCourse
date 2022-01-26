@@ -35,43 +35,54 @@ sidebar <- dashboardSidebar(
   )
 )
 
-body.plot <- dashboardBody(
-  dropdown(
-    icon = icon("paint-brush"),
-    style = "jelly",
-    label = "Color",
-    tooltip = tooltipOptions(title = "Click to select color variable"),
-    animate = animateOptions(
-      enter = animations$fading_entrances$fadeInLeftBig,
-      exit = animations$fading_exits$fadeOutRightBig
+body.plot <- tabPanel("Plot",icon = icon("chart-bar"),
+  fluidRow(
+    box(width=11,
+        title="Scatter Plot",
+        status = "info",
+        solidHeader = T,
+        plotlyOutput("scatterplot")
     ),
-    varSelectizeInput("color", "Color Variable", df)
-  ),
-
-  dropdown(
-    icon = icon("search-location"),
-    style = "jelly",
-    label = "Track",
-    tooltip = tooltipOptions(title = "Click to view country tracking options"),
-    animate = animateOptions(
-      enter = animations$fading_entrances$fadeInLeftBig,
-      exit = animations$fading_exits$fadeOutRightBig
-    ),
-    prettyToggle(
-      "trail",
-      label_on = "Trailing Activated",
-      label_off = "Trailing Deactivated",
-      shape = "round",
-      icon_on = icon("route"),
-      icon_off = icon("route"),
-      # bigger = T,
-      # thick = T,
-      animation = "pulse"
-    ),
-    selectizeInput("tracked_countries", "Track the Following Countries:", NULL, multiple = TRUE),
-  ),
-
-  plotlyOutput("")
+    column(width=1,
+        dropdown(
+          icon = icon("paint-brush"),
+          style = "jelly",
+          label = "Color",
+          right = TRUE,
+          tooltip = tooltipOptions(title = "Click to select color variable",
+                                   placement = "left"),
+          animate = animateOptions(
+            enter = animations$fading_entrances$fadeInRightBig,
+            exit = animations$fading_exits$fadeOutLeftBig
+          ),
+          varSelectizeInput("color", "Color Variable", 
+                            df %>% select(-c(Year, Country)))
+        ),
+        
+        dropdown(
+          icon = icon("search-location"),
+          style = "jelly",
+          label = "Track",
+          right = TRUE,
+          tooltip = tooltipOptions(title = "Click to view country tracking options",
+                                   placement = "left"),
+          animate = animateOptions(
+            enter = animations$fading_entrances$fadeInRightBig,
+            exit = animations$fading_exits$fadeOutLeftBig
+          ),
+          prettyToggle(
+            "trail",
+            label_on = "Trailing Activated",
+            label_off = "Trailing Deactivated",
+            shape = "round",
+            icon_on = icon("route"),
+            icon_off = icon("route"),
+            animation = "pulse"
+          ),
+          selectizeInput("tracked_countries", "Track the Following Countries:", NULL, multiple = TRUE),
+        )
+    )
+  )
 )
 
 body.summary <- tabPanel("Summary",icon = icon("list-alt"),
@@ -79,11 +90,10 @@ body.summary <- tabPanel("Summary",icon = icon("list-alt"),
 
 body <- dashboardBody(
   navbarPage( title = "Gapminder",
-    tabPanel("Plot",icon = icon("chart-bar"),
-             body.plot),
-    body.summary,
-    tabPanel("Table",icon = icon("table"),
-             DT::dataTableOutput("datatable"))
+              body.plot,
+              body.summary,
+              tabPanel("Table",icon = icon("table"),
+                       DT::dataTableOutput("datatable"))
   )
 )
 
