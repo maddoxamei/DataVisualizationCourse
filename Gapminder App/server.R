@@ -57,8 +57,8 @@ server <- function(session, input, output){
     plot_ly(type = 'scatter', mode = 'markers') %>%
       add_trace(data = data$use,
                 x=~LifeExpectancy, y=~Fertility, size=~Population,
-                text = ~Country, name = ~get(input$color),
-                hovertemplate = getHoverText(data$use)) %>% #, color=~get(input$color)
+                text = getHoverText(data$use), color = ~get(input$color),
+                hoverinfo = "text") %>% #, color=~get(input$color)
       layout(xaxis = list(range = c(15, 90)),
              yaxis = list(range = c(0, 9),
                           zeroline = FALSE)) %>%
@@ -68,9 +68,9 @@ server <- function(session, input, output){
                       text = ~Country) %>%
       add_trace(data = data$tracked,
                 x=~LifeExpectancy, y=~Fertility,
-                text = ~Year,
+                text = getHoverText(data$tracked),
                 name = "History",
-                hovertemplate = getHoverText(data$tracked),
+                hoverinfo = "text",
                 marker = list(
                   color = I("black"),
                   symbol = 'x'

@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
 library(dplyr)
+library(plotly)
 
 id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
 df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
