@@ -4,17 +4,18 @@ library(shinyWidgets)
 library(dplyr)
 library(plotly)
 
-id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
-df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+# id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
+# df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
 
 header <- dashboardHeader(disable=T)
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
-    selectizeInput("regions", "Filter Regions:",  df$Region %>% unique() %>% sort(),
-              #options = list(`live-search` = TRUE),
-              options = list(placeholder = "All Regions"),
-              multiple = TRUE),
+    uiOutput("regions_output"),
+    # selectizeInput("regions", "Filter Regions:",  df$Region %>% unique() %>% sort(),
+    #           #options = list(`live-search` = TRUE),
+    #           options = list(placeholder = "All Regions"),
+    #           multiple = TRUE),
     pickerInput("countries", "Filter Countries in Selected Regions:", NULL,
                 options = list(`live-search` = TRUE,
                                `actions-box` = TRUE,
@@ -56,8 +57,9 @@ body.plot <- tabPanel("Plot",icon = icon("chart-bar"),
             enter = animations$fading_entrances$fadeInRightBig,
             exit = animations$fading_exits$fadeOutLeftBig
           ),
-          varSelectizeInput("color", "Color Variable", 
-                            df %>% select(-c(Year, Country)))
+          uiOutput("color_output")
+          # varSelectizeInput("color", "Color Variable", 
+          #                   df %>% select(-c(Year, Country)))
         ),
         
         dropdown(

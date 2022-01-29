@@ -4,9 +4,9 @@ library(shinyWidgets)
 library(dplyr)
 library(plotly)
 
-id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
-df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
-
+#id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
+#df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
+df <- readr::read_csv("./data/WorldBankData.csv")
 
 getHoverText <- function(df){
   paste("<b>",df$Country,"(",df$Year,")</b><br><br>",
@@ -32,7 +32,7 @@ server <- function(session, input, output){
                                      choices = data$agg %>% filter(!if_any(-"Year", is.na)) %>% pull(Year) %>% unique() %>% sort())
                )
   
-  data <- reactiveValues(agg = df, use = df, tracked = df)
+  data <- reactiveValues(agg = df, use = df, tracked = df, color = "Region")
   observeEvent(list(input$regions, input$countries), {
     data$agg <- df %>%
       filter( if(length(input$regions)==0) T else Region %in% input$regions) %>%
@@ -52,13 +52,27 @@ server <- function(session, input, output){
         filter( if(input$trail) Year <= as.numeric(input$year) else Year == as.numeric(input$year) )
     else data$tracked <- data$agg %>% filter(F)
   })
+  observeEvent(input$color, data$color <- input$color)
+  
+  output$regions_output <- renderUI({
+    selectizeInput("regions", "Filter Regions:",  df$Region %>% unique() %>% sort(),
+                   options = list(placeholder = "All Regions"),
+                   multiple = TRUE)
+  })
+  
+  output$color_output <- renderUI({
+    selectizeInput("color", "Color Variable", 
+                      df %>% select(-c(Year, Country)) %>% colnames())
+  })
   
   output$scatterplot <- renderPlotly({
     plot_ly(type = 'scatter', mode = 'markers') %>%
       add_trace(data = data$use,
                 x=~LifeExpectancy, y=~Fertility, size=~Population,
-                text = getHoverText(data$use), color = ~get(input$color),
-                hoverinfo = "text") %>% #, color=~get(input$color)
+                #color = ~get(input$color),
+                color = ~get(data$color),
+                text = getHoverText(data$use),
+                hoverinfo = "text") %>%
       layout(xaxis = list(range = c(15, 90)),
              yaxis = list(range = c(0, 9),
                           zeroline = FALSE)) %>%
