@@ -16,6 +16,7 @@ sidebar <- dashboardSidebar(
     #           #options = list(`live-search` = TRUE),
     #           options = list(placeholder = "All Regions"),
     #           multiple = TRUE),
+    
     pickerInput("countries", "Filter Countries in Selected Regions:", NULL,
                 options = list(`live-search` = TRUE,
                                `actions-box` = TRUE,
@@ -58,8 +59,7 @@ body.plot <- tabPanel("Plot",icon = icon("chart-bar"),
             exit = animations$fading_exits$fadeOutLeftBig
           ),
           uiOutput("color_output")
-          # varSelectizeInput("color", "Color Variable", 
-          #                   df %>% select(-c(Year, Country)))
+          # selectizeInput("color", "Color Variable", NULL, selected = "Region")
         ),
         
         dropdown(

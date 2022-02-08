@@ -16,30 +16,34 @@ getHoverText <- function(df){
 }
 
 server <- function(session, input, output){
-  observeEvent(input$regions, 
-               updatePickerInput(session, "countries",
-                                 choices = df %>%
-                                   select(Region, Country) %>%
-                                   filter( if(length(input$regions)==0) T else Region %in% input$regions) %>%
-                                   arrange(Region)%>% unique() %>%
-                                   tidyr::pivot_wider(names_from = Region, values_from = Country) %>%
-                                   as.list() %>% lapply(unlist))
-               )
-  
-  
+  observeEvent(input$regions, {
+    updatePickerInput(session, "countries",
+                      choices = df %>%
+                        select(Region, Country) %>%
+                        filter( if(length(input$regions)==0) T else Region %in% input$regions) %>%
+                        arrange(Region)%>% unique() %>%
+                        tidyr::pivot_wider(names_from = Region, values_from = Country) %>%
+                        as.list() %>% lapply(unlist))
+    # updateSelectizeInput(session, "color", 
+    #                      choices = df %>% select(-c(Year, Country)) %>% colnames(), 
+    #                      server = TRUE)
+  })
+
+
   observeEvent(input$yr_sep,
                updateSliderTextInput(session, "year",
                                      choices = data$agg %>% filter(!if_any(-"Year", is.na)) %>% pull(Year) %>% unique() %>% sort())
                )
-  
+
   data <- reactiveValues(agg = df, use = df, tracked = df, color = "Region")
   observeEvent(list(input$regions, input$countries), {
     data$agg <- df %>%
       filter( if(length(input$regions)==0) T else Region %in% input$regions) %>%
       filter( if(length(input$countries)==0) T else Country %in% input$countries)
-    updateSelectizeInput(session, "tracked_countries", 
+    updateSelectizeInput(session, "tracked_countries",
                          choices = data$agg %>%
-                           pull(Country) %>% unique() %>% sort())
+                           pull(Country) %>% unique() %>% sort(),
+                         server = TRUE)
   })
   observeEvent(list(input$yr_sep, input$year, data$agg), {
                  if(input$yr_sep) data$use <- data$agg %>%
@@ -53,35 +57,35 @@ server <- function(session, input, output){
     else data$tracked <- data$agg %>% filter(F)
   })
   observeEvent(input$color, data$color <- input$color)
-  
+
   output$regions_output <- renderUI({
     selectizeInput("regions", "Filter Regions:",  df$Region %>% unique() %>% sort(),
                    options = list(placeholder = "All Regions"),
                    multiple = TRUE)
   })
-  
+
   output$color_output <- renderUI({
-    selectizeInput("color", "Color Variable", 
+    selectizeInput("color", "Color Variable",
                       df %>% select(-c(Year, Country)) %>% colnames())
   })
-  
+
   output$scatterplot <- renderPlotly({
     plot_ly(type = 'scatter', mode = 'markers') %>%
       add_trace(data = data$use,
-                x=~LifeExpectancy, y=~Fertility, size=~Population,
+                x=~Fertility, y=~LifeExpectancy, size=~Population,
                 #color = ~get(input$color),
                 color = ~get(data$color),
                 text = getHoverText(data$use),
                 hoverinfo = "text") %>%
-      layout(xaxis = list(range = c(15, 90)),
-             yaxis = list(range = c(0, 9),
+      layout(xaxis = list(range = c(0, 9)),
+             yaxis = list(range = c(15, 90),
                           zeroline = FALSE)) %>%
       add_annotations(data = data$tracked %>%
                         filter( Year == input$year ),
-                      x=~LifeExpectancy, y=~Fertility,
+                      x=~Fertility, y=~LifeExpectancy,
                       text = ~Country) %>%
       add_trace(data = data$tracked,
-                x=~LifeExpectancy, y=~Fertility,
+                x=~Fertility, y=~LifeExpectancy,
                 text = getHoverText(data$tracked),
                 name = "History",
                 hoverinfo = "text",
@@ -105,9 +109,9 @@ server <- function(session, input, output){
              "Number of Countries",
              icon("flag"))
   })
-  
+
   output$fertility <- renderPlotly({
-    hist <- data$use %>% 
+    hist <- data$use %>%
       plot_ly(x = ~Fertility, histnorm = "probability")
     box <- data$use %>%
       plot_ly(x = ~Fertility, type = "box")
@@ -115,7 +119,7 @@ server <- function(session, input, output){
       layout(showlegend = FALSE)
   })
   output$lifeexp <- renderPlotly({
-    hist <- data$use %>% 
+    hist <- data$use %>%
       plot_ly(x = ~LifeExpectancy, histnorm = "probability")
     box <- data$use %>%
       plot_ly(x = ~LifeExpectancy, type = "box")
@@ -123,14 +127,14 @@ server <- function(session, input, output){
       layout(showlegend = FALSE)
   })
   output$population <- renderPlotly({
-    hist <- data$use %>% 
+    hist <- data$use %>%
       plot_ly(x = ~Population, histnorm = "probability")
     box <- data$use %>%
       plot_ly(x = ~Population, type = "box")
     subplot(hist, box, nrows = 2, heights = c(0.7, 0.3), shareX = T) %>%
       layout(showlegend = FALSE)
   })
-  
+
   output$datatable <- DT::renderDataTable(
     data$use, selection = 'none'
   )
