@@ -6,7 +6,8 @@ library(plotly)
 
 #id <- "1oH3T0E2K_QfzS4ISC8G75Y7C6sCWhZtD"
 #df <- readr::read_csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id)) 
-df <- readr::read_csv("./data/WorldBankData.csv")
+df <- readr::read_csv("./data/WorldBankData.csv") %>%
+  filter(!if_any(-"Year",is.na))
 
 getHoverText <- function(df){
   paste("<b>",df$Country,"(",df$Year,")</b><br><br>",
