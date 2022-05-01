@@ -1,0 +1,14 @@
+name: covid_app
+title: covid_app
+username:
+account: maddox
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5886660
+bundleId: 5857909
+url: https://maddox.shinyapps.io/covid_app/
+when: 1651443904.85154
+lastSyncTime: 1651443904.85154
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|test.R

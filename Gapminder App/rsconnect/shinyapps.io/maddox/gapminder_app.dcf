@@ -1,0 +1,14 @@
+name: gapminder_app
+title:
+username:
+account: maddox
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5573105
+bundleId: 5557634
+url: https://maddox.shinyapps.io/gapminder_app/
+when: 1644341358.05178
+lastSyncTime: 1644341358.05178
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData

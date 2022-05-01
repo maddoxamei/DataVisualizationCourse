@@ -1,0 +1,68 @@
+COVID-19 Case Surveillance Public Use Data with Geography Data Dictionary- Public,,,,,,,
+"Last updated: March 21, 2021 (v0.14)",,,,,,,
+Description,Variable,Source,Type,Values,Standard,Privacy Protections,Calculation (if applicable)
+The earlier month of the Clinical Date (date related to the illness or specimen collection) or the Date Received by CDC,case_month,Calculated,"Character, length 7","YYYY-MM; NA, if value suppressed for privacy protection.",ISO 8601,"Quasi-identifier for k-anonymity, k=11.",Month of cdc_case_earliest_dt. Cdc_case_earliest_dt uses the best available date from both cdc_received_dt and cdc_clinical_obs_dt and is an option to end-users who need a date variable with optimized completeness. The logic of cdc_case_earliest_dt is to use the non-null date of one variable when the other is null and to use the earliest valid date when both dates are available.
+State of residence,res_state,Case Report Form,"Character, length 2","NA, if value suppressed for privacy protection.",USPS,"Quasi-identifier for k-anonymity, k=11. Suppressed when # cases < 1,000.",Coded to reporting jurisdiction when not provided.
+State FIPS code,state_fips_code,Calculated,"Character, length 2","NA, if value suppressed for privacy protection.",FIPS 5-2,Suppressed any time state is suppressed.,
+County of residence,res_county,Case Report Form,Character,"NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11. Suppressed when # cases < 1,000. Suppressed when population < 20,000. Suppressed when only single county within state is suppressed and would reveal value, so next smallest county suppressed so at least two counties will be suppressed. Suppressed any time state is suppressed.",Coded to Missing when not provided.
+County FIPS code,county_fips_code,Calculated,"Character, length 5","NA, if value suppressed for privacy protection.","FIPS 6-4, INCITS 31",Suppressed any time county is suppressed.,
+Age group,age_group,Calculated,,"0 - 17 years
+18 - 49 years
+50 - 64 years
+65 + years
+Unknown
+Missing
+NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11. ","The age group value is populated using the age value reported on the case report form. Date of birth is used to fill in missing/unknown age values using the difference in time between date of birth and onset date. Age group category values designed based on epidemiologically meaningful groups and to align with age group categories used by other CDC datasets, visualizations, and publications. 0-17: children and teens (most interactions either at home or at school); 18-49: working age population; 50-64: older working age population (potentially higher risk/more vulnerable); and 65+: older adult population - higher risk for severe outcomes (administrative reason for group: Medicare). Coded to Missing when not provided. "
+Sex,sex,Case Report Form,"Character, categorical","Female
+Male
+Other
+Unknown
+Missing
+NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11. Suppressed when population of sex, race, ethnicity in county < 220 (k*20, so will change if k is changed). Suppressed when case count for county demographic subpopulation >= half county demographic subpopulation.",Coded to Missing when not provided.
+Race,race,Calculated,"Character, categorical","American Indian/Alaska Native
+Asian
+Black
+Multiple/Other
+Native Hawaiian/Other Pacific Islander
+White
+Unknown
+Missing
+NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11. Suppressed when population of sex, race, ethnicity in county < 220 (k*20, so will change if k is changed). Suppressed when case count for county demographic subpopulation >= half county demographic subpopulation.","If more than race was reported, race was categorized into multiple/other races. Coded to Missing when not provided."
+Ethnicity,ethnicity,Case Report Form,"Character, categorical","Hispanic
+Non-Hispanic
+Unknown
+Missing
+NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11. Suppressed when population of sex, race, ethnicity in county < 220 (k*20, so will change if k is changed). Suppressed when case count for county demographic subpopulation >= half county demographic subpopulation.",Coded to Missing when not provided.
+Weeks between earliest date and date of first positive specimen collection,case_positive_specimen_interval,Calculated,Integer,,,,"Calculated by dividing the days between pos_spec_dt and cdc_case_earliest_dt, rounding up. Blank when pos_spec_dt not provided."
+Weeks between earliest date and date of symptom onset,case_onset_interval,Calculated,Integer,,,," Calculated by dividing the days between onset_dt and cdc_case_earliest_dt, rounding up. Since cdc_case_earliest_dt is calculated using the earliest of multiple dates, for some records this will mean the cdc_case_earliest_dt and onset_dt are the same and so the interval is 0 and have the same value as cases with 0 week intervals. Blank when onset_dt not provided."
+Under what process was the case first identified?,process,Calculated,"Character, categorical","Clinical evaluation
+Routine surveillance
+Contact tracing of case patient
+Multiple
+Other
+Unknown
+Missing",,,Coded to Missing when not provided.
+"In the 14 days prior to illness onset, did the patient have any of the following known exposures: domestic travel, international travel, cruise ship or vessel travel as a passenger or crew member, workplace, airport/airplane, adult congregate living facility (nursing, assisted living, or long-term care facility), school/university/childcare center, correctional facility, community event/mass gathering, animal with confirmed or suspected COVID-19, other exposure, contact with a known COVID-19 case?",exposure_yn,Calculated,"Character, categorical","Yes
+Unknown
+Missing",,,"If one or more exposure types are indicated, then yes. Coded to Missing when not provided."
+What is the current status of this person? ,current_status,Case Report Form,"Character, categorical","Laboratory-confirmed case
+Probable case",,,
+What is the symptom status of this person?,symptom_status,Calculated,"Character, categorical","Asymptomatic
+Symptomatic
+Unknown
+Missing",,,Coded to Missing when not provided.
+Was the patient hospitalized?,hosp_yn,Case Report Form,"Character, categorical","Yes
+No
+Unknown
+Missing",,,Coded to Missing when not provided.
+Was the patient admitted to an intensive care unit (ICU)?,icu_yn,Case Report Form,"Character, categorical","Yes
+No
+Unknown
+Missing",,,Coded to Missing when not provided.
+Did the patient die as a result of this illness?,death_yn,Case Report Form,"Character, categorical","Yes
+No
+Unknown
+Missing
+NA, if value suppressed for privacy protection.",,"Quasi-identifier for k-anonymity, k=11.",Coded to Missing when not provided.
+"Did the patient have one or more of the underlying medical conditions and risk behaviors: diabetes mellitus, hypertension, severe obesity (Body Mass Index ≥40 kg/m2), cardiovascular disease, chronic renal disease, chronic liver disease, chronic lung disease, other chronic diseases, immunosuppressive condition, autoimmune condition, current smoker, former smoker, substance abuse or misuse, disability, psychological/psychiatric, pregnancy, other?",underlying_conditions_yn,Calculated,"Character, categorical","Yes
+No",,,"If one or more underlying medical condition or risk behavior are indicated, then yes. If explicitly provided that no conditions are present, then no. Blank if not calculatable."
